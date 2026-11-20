@@ -1,89 +1,133 @@
-
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Нафта і газ України — гра-карта</title>
+<title>Корисні копалини України — ігри</title>
 <style>
-  .tabs{display:flex;gap:6px;margin:0 0 8px}
-#fun{display:none}
-#fun img{width:100%;height:auto;border-radius:14px;border:1px solid #cfd6e4;background:#fff}
-#fun p{font-size:13px;color:var(--mut);margin:8px 2px}
-  :root{--ink:#1d2433;--mut:#6b7385;--card:#fff;--bg:#f2f4f8;--ok:#2e9d57;--bad:#d64545;--west:#6b4fa3;--east:#c2563f;--south:#1f8a9c}
+  :root{--ink:#1d2433;--mut:#6b7385;--card:#fff;--bg:#f2f4f8;--ok:#2e9d57;--bad:#d64545}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
   .wrap{max-width:900px;margin:0 auto;padding:10px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{white-space:nowrap}
   header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:2px 2px 8px}
-  h1{font-size:17px;margin:0;line-height:1.2}
+  h1{font-size:16px;margin:0;line-height:1.25}
+  h1 small{display:block;font-weight:400;font-size:12.5px;color:var(--mut)}
   .stat{font-size:13px;color:var(--mut);text-align:right;white-space:nowrap}
   .stat b{color:var(--ink)}
   .bar{height:6px;background:#dfe3ec;border-radius:4px;overflow:hidden;margin-bottom:8px}
   .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
-  .mapbox{position:relative;background:#dfeaf5;border-radius:14px;overflow:hidden;border:1px solid #cfd6e4}
-  svg{display:block;width:100%;height:auto;touch-action:manipulation;cursor:crosshair}
-  .toast{position:absolute;left:8px;right:8px;top:8px;padding:8px 10px;border-radius:10px;font-size:13px;background:rgba(29,36,51,.92);color:#fff;opacity:0;transform:translateY(-6px);transition:.2s;pointer-events:none;text-align:center}
-  .toast.show{opacity:1;transform:none}
-  .toast.good{background:rgba(46,157,87,.95)}
-  .toast.err{background:rgba(214,69,69,.95)}
+  .mapbox{position:relative;border-radius:16px;overflow:hidden;border:1px solid #b9c7d8;box-shadow:0 4px 14px rgba(40,60,90,.18),inset 0 0 0 3px rgba(255,255,255,.5);background:#e9e5d8}
+  svg.map{display:block;width:100%;aspect-ratio:760/510;height:auto;touch-action:manipulation;cursor:crosshair}
+  .zoom{position:absolute;left:8px;top:8px;display:flex;gap:4px;flex-wrap:wrap;max-width:calc(100% - 70px)}
+  .zoom button{font-size:11px;padding:4px 9px;background:rgba(255,255,255,.88);border-color:rgba(120,130,150,.4);backdrop-filter:blur(3px)}
+  .zoom button.on{background:var(--ink);color:#fff}
+  .north{position:absolute;right:8px;bottom:8px;font-size:11px;font-weight:700;color:#35506b;background:rgba(255,255,255,.8);border-radius:999px;padding:3px 8px}
+  .toast{position:fixed;left:50%;top:10px;transform:translate(-50%,-10px);max-width:min(92vw,560px);padding:9px 12px;border-radius:10px;font-size:13px;background:rgba(29,36,51,.94);color:#fff;opacity:0;transition:.2s;pointer-events:none;text-align:center;z-index:30}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.good{background:rgba(46,157,87,.96)}
+  .toast.err{background:rgba(214,69,69,.96)}
   .row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
   button{font:inherit;font-size:13px;border:1px solid #cbd2e1;background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;cursor:pointer}
   button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .tray h2{font-size:13px;margin:10px 2px 6px;color:var(--mut);font-weight:600}
-  .chip{padding:9px 13px;font-size:14px;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+  .tray{margin-top:8px}
+  .tray h2{font-size:13px;margin:0 2px 6px;color:var(--mut);font-weight:600}
+  #chips{margin:0}
+  .chip{padding:8px 12px;font-size:14px;border-radius:12px;display:inline-flex;align-items:center;gap:6px;text-align:left;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+  .chip small{color:var(--mut);font-size:11.5px}
   .chip.sel{background:#ffd54a;border-color:#e0b400;font-weight:600}
-  .chip.shake{animation:sh .35s}
+  .chip.sel small{color:#6b5400}
+  .chip.shake,.col.shake{animation:sh .35s}
+  .ghost{position:fixed;z-index:25;pointer-events:none;opacity:.96;transform:translate(-50%,-135%);box-shadow:0 8px 20px rgba(0,0,0,.28);cursor:grabbing}
+  /* таблиця платформ */
+  #chips.tbl{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0;background:var(--card);border:1px solid #cfd6e4;border-radius:12px;overflow:hidden}
+  #chips.tbl .chip{border:0;border-bottom:1px solid #e5e9f1;border-radius:0;background:transparent;padding:10px 12px;width:100%;font-size:14px}
+  #chips.tbl .chip::before{content:"⠿";color:#9aa3b8;font-size:16px}
+  #chips.tbl .chip.sel{background:#fff3c4}
   @keyframes sh{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-  .land{fill:#f6f1e1;stroke:#8d7aa8;stroke-width:1.6}
-  .reg{transition:opacity .25s}
-  .reg.pulse{animation:pl .5s ease 4}
+  .pulse{animation:pl .5s ease 4}
   @keyframes pl{50%{opacity:1}}
-  .city text{font-size:9px;fill:#5a6275;paint-order:stroke;stroke:#f6f1e1;stroke-width:2.5px}
-  .city circle{fill:#8b93a6}
+  .reg{transition:opacity .25s}
+  .city circle{fill:#fff;stroke:#5a6275;stroke-width:1.2}
+  .city .cap circle{fill:#1d2433;stroke:#fff}
+  .city text{font-size:9px;fill:#4a5266;font-weight:600;paint-order:stroke;stroke:rgba(255,252,240,.95);stroke-width:2.6px;stroke-linejoin:round}
+  .nb{font-size:11px;font-style:italic;fill:#9a9582;letter-spacing:.06em;text-transform:uppercase}
+  .sea{font-size:11px;font-style:italic;fill:#4b86ad;letter-spacing:.1em}
   .ping{fill:none;stroke:var(--bad);stroke-width:2;animation:png .7s forwards}
-  @keyframes png{from{r:4;opacity:1}to{r:26;opacity:0}}
   .ping.g{stroke:var(--ok)}
-  .lab{font-size:10px;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
-  .rlab{font-size:11px;font-weight:700;fill:#4b3b6e;opacity:.85;paint-order:stroke;stroke:rgba(255,255,255,.7);stroke-width:2.5px}
+  @keyframes png{from{r:4;opacity:1}to{r:26;opacity:0}}
+  .pop{animation:pop .38s cubic-bezier(.2,1.6,.4,1);transform-origin:0 0}
+  @keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+  .lab{font-size:10px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;fill:#1d2433}
+  .alab{font-size:10px;font-weight:700;paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:3px;stroke-linejoin:round;fill:#2b2340;text-anchor:middle}
+  .rlab{font-size:11px;font-weight:700;fill:#4b3b6e;opacity:.9;paint-order:stroke;stroke:rgba(255,255,255,.75);stroke-width:2.5px;text-anchor:middle}
+  .info{display:none;margin-top:8px;background:var(--card);border:1px solid #cfd6e4;border-left:5px solid var(--ok);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4}
+  .info b{display:block;margin-bottom:2px}
   .end{display:none;margin-top:10px;background:var(--card);border-radius:14px;padding:14px;text-align:center;border:1px solid #cfd6e4}
   .end.show{display:block}
   .end h3{margin:0 0 4px;font-size:18px}
   .hint{font-size:12px;color:var(--mut);margin:4px 2px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+  .col{background:var(--card);border:2px dashed #b9c1d3;border-radius:14px;padding:10px;min-height:150px;cursor:pointer;text-align:left;transition:background .15s,border-color .15s}
+  .col.over{background:#fffbe6;border-color:#e0b400}
+  .col h4{margin:0 0 2px;font-size:15px}
+  .col p{margin:0 0 8px;font-size:11.5px;color:var(--mut)}
+  .tag{display:inline-block;background:#e7f6ec;border:1px solid #b6e0c5;color:#1d5a35;border-radius:8px;padding:3px 7px;font-size:12.5px;margin:0 4px 4px 0}
+  .funbox{background:var(--card);border:1px solid #cfd6e4;border-radius:14px;padding:8px;overflow:auto;max-height:78vh}
+  .funbox img{display:block;width:100%;border-radius:10px;cursor:zoom-in}
+  .funbox img.big{width:220%;max-width:none;cursor:zoom-out}
+  .funmiss{display:none;padding:16px;text-align:center;color:var(--mut);font-size:14px;line-height:1.45}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="tabs">
-  <button id="tabGame" class="on">🎮 Гра</button>
-  <button id="tabFun">✨ Цікаве</button>
-</div>
-<div id="game">
+  <div class="tabs" id="tabs"></div>
   <header>
-    <h1>🛢️ Нафта і природний газ<br><span style="font-weight:400;font-size:13px;color:var(--mut)">Постав родовище на своє місце</span></h1>
+    <h1 id="title"></h1>
     <div class="stat">Поставлено: <b id="done">0</b>/<b id="total">0</b><br>Помилок: <b id="err">0</b></div>
   </header>
   <div class="bar"><i id="bar"></i></div>
-  <div class="mapbox">
-    <svg id="svg" viewBox="0 0 760 510" xmlns="http://www.w3.org/2000/svg" aria-label="Карта України"></svg>
-    <div class="toast" id="toast"></div>
+
+  <div id="mapSec">
+    <div class="mapbox">
+      <svg class="map" id="svg" viewBox="0 0 760 510" xmlns="http://www.w3.org/2000/svg" aria-label="Карта України"></svg>
+      <div class="zoom" id="focus">
+        <button data-v="all" class="on">Уся країна</button>
+        <button data-v="west">Захід</button>
+        <button data-v="center">Центр</button>
+        <button data-v="east">Схід</button>
+        <button data-v="south">Південь</button>
+      </div>
+      <div class="north">⬆ Пн</div>
+    </div>
   </div>
 
-  <div class="row" id="focus">
-    <button data-v="all" class="on">Уся країна</button>
-    <button data-v="west">Захід</button>
-    <button data-v="east">Схід</button>
-    <button data-v="south">Південь</button>
+  <div id="sortSec" style="display:none">
+    <div class="row" id="levels"></div>
+    <div class="cols" id="cols"></div>
   </div>
-  <div class="row">
-    <button id="mode">Підказки на карті: ввімк.</button>
-    <button id="hintBtn">💡 Показати регіон</button>
-    <button id="reset">↻ Спочатку</button>
+
+  <div id="funSec" style="display:none">
+    <div class="funbox">
+      <img id="funImg" src="mnemo.jpg" alt="Цікаве — мнемоніка">
+      <div class="funmiss" id="funMiss">Не вдалося завантажити картинку <b>mnemo.jpg</b>.<br>Поклади файл <b>mnemo.jpg</b> в ту саму папку, де лежить цей HTML-файл.</div>
+    </div>
+    <p class="hint">Торкнись картинки, щоб збільшити; ще раз — щоб повернути.</p>
   </div>
 
   <div class="tray">
-    <h2>1) Обери родовище → 2) торкнись місця на карті</h2>
+    <h2 id="trayTitle"></h2>
     <div class="row" id="chips"></div>
+  </div>
+
+  <div class="info" id="info"></div>
+
+  <div class="row" id="ctrl">
+    <button id="mode"></button>
+    <button id="hintBtn">💡 Підказка</button>
+    <button id="reset">↻ Спочатку</button>
   </div>
 
   <div class="end" id="end">
@@ -91,22 +135,75 @@
     <div id="endText" class="hint"></div>
     <div class="row" style="justify-content:center"><button id="again" class="on">Грати ще раз</button></div>
   </div>
-  <p class="hint">Режим «Складно» (підказки вимкнено): на карті лише контур і міста. Положення родовищ приблизні — як на шкільній карті.</p>
-  </div>
-<div id="fun">
-  <img src="mnemo.jpg" alt="Ассоціації до назв родовищ">
-  <p>Запам'ятовуй назви родовищ за картинками: кожна підказка схожа на назву за звучанням.</p>
+  <p class="hint" id="foot"></p>
 </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-const K=39.8, S=60;
+/* ================= геометрія карти ================= */
+const K=39.8,S=60;
 const X=lon=>(lon-21.5)*K, Y=lat=>(52.7-lat)*S;
 const pts=a=>a.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ');
 const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+function smooth(points,closed,t){
+  t=t||0.16;const P=points.map(p=>[X(p[0]),Y(p[1])]),n=P.length;
+  const g=i=>closed?P[(i+n)%n]:P[Math.max(0,Math.min(n-1,i))];
+  let d='M'+P[0][0].toFixed(1)+','+P[0][1].toFixed(1);
+  for(let i=0;i<(closed?n:n-1);i++){
+    const a=g(i-1),b=g(i),c=g(i+1),e=g(i+2);
+    d+=`C${(b[0]+(c[0]-a[0])*t).toFixed(1)},${(b[1]+(c[1]-a[1])*t).toFixed(1)} ${(c[0]-(e[0]-b[0])*t).toFixed(1)},${(c[1]-(e[1]-b[1])*t).toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
+  }
+  return d+(closed?'Z':'');
+}
 
 const UA=[[23.6,51.6],[24.1,50.9],[23.6,50.4],[24.1,50.3],[23.5,49.9],[22.7,49.6],[22.6,49.1],[22.15,48.4],[22.9,47.95],[23.4,48.0],[24.2,47.9],[25.0,47.7],[25.4,47.9],[26.2,48.2],[26.6,48.25],[27.2,48.4],[27.6,48.5],[28.3,48.15],[28.9,47.9],[29.2,47.5],[29.5,46.9],[30.0,46.4],[30.1,45.9],[29.6,45.4],[30.2,45.8],[30.7,46.4],[31.5,46.6],[32.2,46.2],[33.0,46.05],[32.6,45.4],[33.5,44.6],[34.4,44.5],[35.4,44.9],[36.5,45.3],[36.4,45.45],[35.2,45.3],[35.0,45.9],[35.5,46.3],[36.6,46.7],[37.5,47.05],[38.2,47.1],[39.2,47.3],[39.8,47.9],[40.1,49.2],[40.0,49.6],[38.0,50.0],[37.5,50.4],[35.4,51.0],[34.4,51.3],[34.1,51.7],[33.5,52.3],[32.7,52.3],[31.8,52.1],[30.7,51.4],[29.2,51.4],[28.2,51.6],[27.0,51.8],[25.8,51.9],[24.3,51.8]];
 
+const BLACK_SEA=[[29.6,45.4],[30.2,45.8],[30.7,46.4],[31.5,46.6],[32.2,46.2],[33.0,46.05],[32.6,45.4],[33.5,44.6],[34.4,44.5],[35.4,44.9],[36.5,45.3],[38.6,45.3],[38.6,42.4],[27.4,42.4],[27.4,45.0],[29.0,45.0]];
+const AZOV=[[36.5,45.3],[36.4,45.45],[35.2,45.3],[35.0,45.9],[35.5,46.3],[36.6,46.7],[37.5,47.05],[38.6,47.2],[38.6,45.3]];
+
+const RIVERS=[
+  [[30.6,51.45],[30.5,50.45],[31.45,49.75],[32.05,49.45],[33.4,49.07],[34.6,48.5],[35.05,48.46],[35.15,47.85],[34.4,47.57],[33.6,47.1],[33.5,46.8],[32.6,46.63],[32.1,46.5]],
+  [[33.5,52.2],[32.4,51.6],[31.3,51.45],[30.6,50.8]],
+  [[23.5,49.2],[24.6,49.1],[25.7,48.65],[26.7,48.5],[27.8,48.45],[28.9,48.1],[29.3,47.5],[29.9,46.7],[30.3,46.25]],
+  [[28.5,49.7],[28.5,49.2],[29.6,48.4],[30.85,48.05],[31.4,47.55],[31.95,46.98]],
+  [[36.4,50.4],[36.7,49.8],[37.25,49.2],[37.9,49.0],[38.4,48.9],[39.3,48.95]],
+  [[28.2,45.45],[29.0,45.4],[29.6,45.3]]
+];
+const MOUNTS=[[22.7,48.65],[23.2,48.55],[23.7,48.65],[24.15,48.5],[24.6,48.45],[25.05,48.3],[25.5,48.15],[23.35,49.0],[23.85,48.9],[24.3,48.8],[24.9,48.75],[33.7,44.75],[34.15,44.8],[34.6,44.8],[35.1,44.9]];
+const NEIGH=[['Польща',22.2,50.5],['Білорусь',27.2,52.35],['Росія',39.9,51.2],['Молдова',27.7,47.4],['Румунія',24.4,47.0],['Словаччина',21.7,49.15],['Угорщина',21.8,47.9]];
+
+const CITIES=[['Київ',30.52,50.45,1],['Львів',24.03,49.84],['Харків',36.23,49.99],['Одеса',30.73,46.48],['Дніпро',35.05,48.46],['Донецьк',37.8,48.0],['Сімферополь',34.1,44.95],['Івано-Франківськ',24.71,48.92],['Чернівці',25.93,48.29],['Луцьк',25.34,50.75],['Полтава',34.55,49.59],['Чернігів',31.29,51.49],['Ужгород',22.3,48.62],['Херсон',32.6,46.64],['Суми',34.8,50.91],['Запоріжжя',35.14,47.84],['Вінниця',28.47,49.23]];
+
+const VIEWS={all:[0,0,760,510],west:[5,85,300,200],center:[300,130,330,220],east:[340,30,420,280],south:[300,260,420,280]};
+
+/* ================= символи ================= */
+function symSVG(s,col){
+  const k='#111';
+  const m={
+    tri:`<path d="M0,-6L6,5H-6Z" fill="${k}"/>`,
+    mn:`<path d="M-6,5V-5L0,1L6,-5V5Z" fill="${k}"/>`,
+    hg:`<circle r="5" fill="#fff" stroke="${k}" stroke-width="2"/><circle r="1.8" fill="${k}"/>`,
+    ni:`<path d="M-6,-5H6L0,5Z" fill="${k}"/>`,
+    au:`<circle r="5.5" fill="#fff" stroke="${k}" stroke-width="1.5"/><path d="M0,-5.5A5.5,5.5 0 0 0 0,5.5Z" fill="${k}"/>`,
+    u:`<circle r="5.5" fill="${k}"/><circle r="2.3" fill="#fff"/>`,
+    ti:`<path d="M0,-6L5,0L0,6L-5,0Z" fill="#fff" stroke="${k}" stroke-width="1.4"/><path d="M0,-6L5,0L0,6Z" fill="${k}"/>`,
+    cr:`<rect x="-5" y="-5" width="10" height="10" fill="#fff" stroke="${k}" stroke-width="1.4"/><path d="M-5,-5L5,5M5,-5L-5,5" stroke="${k}" stroke-width="1.4"/>`,
+    salt:`<rect x="-5" y="-5" width="10" height="10" fill="#fff" stroke="${k}" stroke-width="1.7"/>`,
+    k:`<rect x="-5" y="-5" width="10" height="10" fill="#ffe066" stroke="${k}" stroke-width="1.7"/>`,
+    s:`<path d="M0,-6L6,5H-6Z" fill="#fff" stroke="${k}" stroke-width="1.4"/><path d="M0,-6L6,5H0Z" fill="${k}"/>`,
+    kao:`<rect x="-5" y="-5" width="10" height="10" fill="#fff" stroke="${k}" stroke-width="1.4"/><path d="M-5,-5H5L-5,5Z" fill="${k}"/>`,
+    gran:`<path d="M0,-6L6,0L0,6L-6,0Z" fill="#fff" stroke="${k}" stroke-width="1.6"/>`,
+    gr:`<rect x="-3" y="-6" width="6" height="12" rx="1" fill="${k}"/>`,
+    wat:`<path d="M0,-6C4,-1 5,1 5,2.5A5,5 0 0 1 -5,2.5C-5,1 -4,-1 0,-6Z" fill="#2563eb"/>`,
+    amb:`<circle r="5.5" fill="#f2a900" stroke="#8a5a00" stroke-width="1.4"/>`,
+    dot:`<circle r="5" fill="${col||k}" stroke="#fff" stroke-width="1.5"/>`
+  };
+  return m[s]||m.dot;
+}
+const miniSym=(s,col)=>`<svg width="16" height="16" viewBox="-7 -7 14 14">${symSVG(s,col)}</svg>`;
+
+/* ================= дані ================= */
 const REG={
   west:{name:'Карпатський (Західний) регіон',col:'#6b4fa3',lab:[23.1,48.35],
     poly:[[24.0,51.0],[25.4,50.9],[25.7,49.6],[26.4,48.8],[26.6,48.25],[25.4,47.9],[24.2,47.9],[22.9,47.95],[22.15,48.4],[22.6,49.1],[22.7,49.6],[23.5,49.9],[24.1,50.3],[23.6,50.4],[24.1,50.9]]},
@@ -116,7 +213,7 @@ const REG={
     poly:[[32.8,45.8],[33.0,46.1],[34.0,46.1],[35.5,46.3],[36.6,46.8],[37.5,47.0],[37.3,46.5],[36.0,46.0],[36.6,45.4],[35.4,44.9],[34.4,44.5],[33.5,44.6],[32.6,45.2],[31.2,45.1],[31.0,45.5],[31.3,45.95]]}
 };
 
-const DEP=[
+const OIL=[
   {n:'Леляківське',lon:32.0,lat:50.9,r:'east'},
   {n:'Гнідинцівське',lon:32.6,lat:50.5,r:'east'},
   {n:'Західнохрестищенське',lon:35.3,lat:49.3,r:'east'},
@@ -132,62 +229,163 @@ const DEP=[
   {n:'Голіцинське',lon:31.4,lat:45.3,r:'south'},
   {n:'Штормове',lon:32.0,lat:45.65,r:'south'},
   {n:'Казантинське',lon:35.9,lat:45.6,r:'south'}
+].map(d=>({...d,sym:'dot',col:REG[d.r].col,where:REG[d.r].name}));
+
+const ORE=[
+  {n:'Криворізький басейн',res:'залізні руди',sym:'tri',lon:33.4,lat:47.9,where:'Дніпропетровська область'},
+  {n:'Кременчуцьке',res:'залізні руди',sym:'tri',lon:33.6,lat:49.1,where:'Полтавська область'},
+  {n:'Білозерське',res:'залізні руди',sym:'tri',lon:35.3,lat:47.5,where:'Запорізька область'},
+  {n:'Керченський басейн',res:'залізні руди',sym:'tri',lon:36.4,lat:45.35,where:'Крим'},
+  {n:'Нікопольський басейн',res:'марганцеві руди',sym:'mn',lon:34.4,lat:47.6,where:'Дніпропетровська область'},
+  {n:'Великотокмацьке',res:'марганцеві руди',sym:'mn',lon:35.75,lat:47.2,where:'Запорізька область'},
+  {n:'Побужжя',res:'хромові руди',sym:'cr',lon:31.0,lat:48.5,where:'Кіровоградська область'},
+  {n:'Побужжя',res:'нікелеві та кобальтові руди',sym:'ni',lon:31.5,lat:48.0,where:'Кіровоградська область'},
+  {n:'Мужіївське',res:'золото',sym:'au',lon:23.0,lat:48.3,where:'Закарпаття'},
+  {n:'Іршанське',res:'титанові руди',sym:'ti',lon:28.5,lat:50.75,where:'Житомирська область'},
+  {n:'Самотканське',res:'титанові руди',sym:'ti',lon:35.0,lat:48.35,where:'Дніпропетровська область'},
+  {n:'Микитівське',res:'ртутні руди',sym:'hg',lon:38.0,lat:48.55,where:'Донецька область'},
+  {n:'Новокостянтинівське',res:'уранові руди',sym:'u',lon:33.4,lat:48.4,where:'Кіровоградська область'}
 ];
 
-const CITIES=[['Київ',30.52,50.45],['Львів',24.03,49.84],['Харків',36.23,49.99],['Одеса',30.73,46.48],['Дніпро',35.05,48.46],['Донецьк',37.8,48.0],['Сімферополь',34.1,44.95],['Івано-Франківськ',24.71,48.92],['Чернівці',25.93,48.29],['Луцьк',25.34,50.75],['Полтава',34.55,49.59],['Чернігів',31.29,51.49],['Ужгород',22.3,48.62],['Херсон',32.6,46.64],['Суми',34.8,50.91],['Запоріжжя',35.14,47.84],['Вінниця',28.47,49.23]];
+const NON=[
+  {n:'Калуш-Голинське',res:'калійні солі',sym:'k',lon:24.35,lat:49.05,where:'Івано-Франківська область'},
+  {n:'Стебницьке',res:'калійні солі',sym:'k',lon:23.55,lat:49.3,where:'Львівська область'},
+  {n:'Бахмутівське',res:'кам’яна сіль',sym:'salt',lon:38.0,lat:48.6,where:'Донецька область'},
+  {n:'Слов’янське',res:'кам’яна сіль',sym:'salt',lon:37.6,lat:48.85,where:'Донецька область'},
+  {n:'Солотвинське',res:'кам’яна сіль',sym:'salt',lon:23.87,lat:47.95,where:'Закарпатська область'},
+  {n:'Озеро Сиваш',res:'сіль',sym:'salt',lon:34.9,lat:46.0,where:'Крим / Херсонщина'},
+  {n:'Завалівське',res:'графіт',sym:'gr',lon:31.0,lat:48.6,where:'Кіровоградська область'},
+  {n:'Полісся',res:'бурштин',sym:'amb',lon:27.4,lat:51.2,where:'північ Рівненської та Житомирської областей'},
+  {n:'Яворівське',res:'самородна сірка',sym:'s',lon:23.4,lat:49.95,where:'Львівська область'},
+  {n:'Роздільське',res:'самородна сірка',sym:'s',lon:23.95,lat:49.5,where:'Львівська область'},
+  {n:'Баранівка',res:'каолін',sym:'kao',lon:27.65,lat:50.3,where:'Житомирська область'},
+  {n:'Коростишів',res:'граніт',sym:'gran',lon:29.05,lat:50.32,where:'Житомирська область'},
+  {n:'Миргородське',res:'мінеральні води',sym:'wat',lon:33.6,lat:49.97,where:'Полтавська область'},
+  {n:'Хмільницьке',res:'мінеральні води',sym:'wat',lon:27.95,lat:49.55,where:'Вінниччина'}
+];
 
-const VIEWS={all:[0,0,760,510],west:[5,85,300,200],east:[340,30,420,280],south:[310,300,420,210]};
+/* тектонічні структури; порядок = пріоритет при кліку (дрібні й перекриті — першими) */
+const TEC=[
+  {n:'Області альпійської складчастості',col:'#e6c229',where:'Карпати та Кримські гори',
+   polys:[[[22.4,48.5],[23.6,49.3],[24.8,49.2],[26.0,48.6],[26.6,48.25],[24.5,47.9],[23.0,48.0]],[[33.5,44.65],[34.3,45.0],[35.6,45.05],[34.6,44.5]]],
+   info:'Це складчасті споруди — Карпати та Кримські гори. Складчасті споруди та їх передгірні окраїни мають у надрах різноманітні за походженням мінеральні ресурси.'},
+  {n:'Скіфська плита',col:'#b08a5a',where:'північ Криму та Приазов’я',
+   polys:[[[33.2,45.85],[34.8,45.95],[36.2,45.4],[35.0,45.15],[33.6,45.3]]],
+   info:'Молодша плита на півдні України — північна частина Кримського півострова.'},
+  {n:'Складчаста зона Добруджа',col:'#c9a27a',where:'південний захід, дельта Дунаю',
+   polys:[[[29.6,45.3],[30.5,45.8],[30.9,46.3],[30.0,46.2],[29.7,45.8]]],
+   info:'Невелика складчаста зона на крайньому південному заході країни, біля дельти Дунаю.'},
+  {n:'Львівська (Галицько-Волинська) западина',col:'#9bd36b',where:'захід, Львівщина',
+   polys:[[[23.4,50.6],[24.8,50.9],[24.8,49.6],[24.3,49.3],[23.4,49.6]]],
+   info:'У західній частині Східноєвропейської платформи плита переходить у Галицько-Волинську (Львівську) западину. Товща осадових порід (пісків, мергелів, крейди) наростає там до 6 км.'},
+  {n:'Донецька складчаста область',col:'#a8704f',where:'схід, Донбас',
+   polys:[[[37.5,49.0],[39.2,49.4],[40.1,48.8],[39.8,47.6],[38.3,47.6],[37.4,48.1]]],
+   info:'Складчаста область на сході країни — Донбас. Саме тут кам’яна сіль (Бахмутівське, Слов’янське) і ртутні руди (Микитівське).'},
+  {n:'Воронезький кристалічний масив',col:'#b5524f',where:'північний схід',
+   polys:[[[34.0,51.9],[35.8,51.3],[38.2,50.4],[38.9,51.0],[37.0,52.0],[35.0,52.4]]],
+   info:'Виступ кристалічного фундаменту Східноєвропейської платформи на північному сході.'},
+  {n:'Дніпровсько-Донецька западина',col:'#8fcf5f',where:'північний схід, від Чернігівщини до Луганщини',
+   polys:[[[31.0,51.4],[33.0,52.0],[34.5,51.3],[36.0,50.6],[38.5,49.8],[39.5,49.3],[38.0,48.9],[36.0,49.3],[34.0,49.8],[32.2,50.3]]],
+   info:'Тектонічна западина, заповнена осадовими породами. Тут сконцентровані родовища нафти і природного газу (Східний нафтогазоносний регіон).'},
+  {n:'Волино-Подільська плита',col:'#f2a7a7',where:'на західному схилі щита',
+   polys:[[[24.8,50.9],[26.5,51.2],[28.2,49.9],[29.6,48.6],[28.6,48.1],[26.8,48.3],[25.6,48.9],[24.8,49.6]]],
+   info:'Лежить на західному схилі щита. Особливо потужними там є відклади пісковиків і вапняків.'},
+  {n:'Причорноморська западина',col:'#a9825c',where:'південь, шельф Чорного моря',
+   polys:[[[29.8,46.3],[31.5,46.7],[33.5,46.3],[35.5,46.5],[37.0,47.0],[37.4,46.6],[35.5,46.0],[33.5,45.85],[31.0,45.5],[30.0,45.8]]],
+   info:'На півдні платформи. Вона так само виповнена осадовими відкладами — від 1 до 11 км (на шельфі Чорного моря).'},
+  {n:'Український щит',col:'#e0636f',where:'центр країни, на північний схід до Приазов’я',
+   polys:[[[27.2,51.2],[29,51.6],[31,51.4],[32.6,50.6],[35.0,48.9],[37.5,47.5],[36.5,47.2],[34.0,47.3],[31.5,47.9],[29.6,48.6],[28.2,49.8]]],
+   info:'Кристалічний фундамент перекритий тут незначною (декілька десятків метрів) товщею осадових відкладів, а в багатьох місцях докембрійські породи виходять на земну поверхню. Давніми глибинними розломами щит розбитий на великі блоки.'}
+];
 
-const svg=document.getElementById('svg');
-const $=id=>document.getElementById(id);
+/* таблиця-сортування */
+const SORTS=[
+  {id:'t1',name:'Тип копалини',
+   cols:[{id:'f',n:'Паливні',s:'для тепла та енергії'},{id:'o',n:'Рудні',s:'для металургії'},{id:'n',n:'Нерудні',s:'сировина для хімії, будівництва, техніки'}],
+   items:[['Кам’яне вугілля','f'],['Буре вугілля','f'],['Нафта','f'],['Природний газ','f'],['Торф','f'],
+     ['Залізні руди','o'],['Марганцеві руди','o'],['Хромові руди','o'],['Нікелеві руди','o'],['Титанові руди','o'],['Ртутні руди','o'],['Золото','o'],['Уранові руди','o'],
+     ['Кухонна сіль','n'],['Калійні солі','n'],['Самородна сірка','n'],['Каолін (біла глина)','n'],['Граніт','n'],['Вапняк','n'],['Крейда','n'],['Графіт','n'],['Мінеральні води','n'],['Бурштин','n']]},
+  {id:'t2',name:'Нерудні: групи',
+   cols:[{id:'c',n:'Хімічна сировина',s:''},{id:'b',n:'Будівельна сировина',s:''},{id:'t',n:'Технічна сировина',s:''}],
+   items:[['Кухонна сіль','c'],['Калійні солі','c'],['Самородна сірка','c'],['Каолін (біла глина)','b'],['Граніт','b'],['Вапняк','b'],['Крейда','b'],['Графіт','t'],['Мінеральні води','t']]},
+  {id:'t3',name:'Рудні: метали',
+   cols:[{id:'b',n:'Чорні метали',s:'залізо, марганець, хром'},{id:'c',n:'Кольорові метали',s:'решта руд'}],
+   items:[['Залізні руди','b'],['Марганцеві руди','b'],['Хромові руди','b'],['Титанові руди','c'],['Нікелеві руди','c'],['Ртутні руди','c'],['Золото','c'],['Уранові руди','c']]}
+];
+
+const MAPTRAY='Перетягни назву на карту (або обери її й торкнись місця)';
+const GAMES=[
+  {id:'oil',tab:'🛢 Нафта і газ',kind:'point',title:'Нафта і природний газ',sub:'Постав родовище на своє місце',items:OIL,modeName:'Підказки на карті',tray:MAPTRAY},
+  {id:'ore',tab:'⛏ Рудні',kind:'point',title:'Рудні корисні копалини',sub:'Постав родовище і його позначку на карті',items:ORE,modeName:'Назви міст',tray:MAPTRAY},
+  {id:'non',tab:'🧂 Нерудні',kind:'point',title:'Нерудні корисні копалини',sub:'Постав родовище і його позначку на карті',items:NON,modeName:'Назви міст',tray:MAPTRAY},
+  {id:'tec',tab:'🗺 Платформи',kind:'area',title:'Тектонічна будова України',sub:'Перетягни структуру з таблиці на її місце на карті',items:TEC,modeName:'Контури на карті',tray:'Таблиця структур — перетягни назву на карту'},
+  {id:'fun',tab:'✨ Цікаве',kind:'fun',title:'Цікаве',sub:'Мнемоніка для запам’ятовування',modeName:'',tray:''},
+  {id:'sort',tab:'📋 Таблиця',kind:'sort',title:'Сортування копалин',sub:'Перетягни копалину в потрібну колонку',modeName:'',tray:'Копалини (перетягни в колонку або обери й торкнись колонки)'}
+];
+
+/* ================= SVG-шари ================= */
+const svg=$('svg');
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+const defs=el('defs',{});
+defs.innerHTML=`
+  <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe1f2"/><stop offset="1" stop-color="#86bfe0"/></linearGradient>
+  <linearGradient id="landG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf8ea"/><stop offset="1" stop-color="#f0e7c9"/></linearGradient>
+  <filter id="shLand" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#3b2f55" flood-opacity=".28"/></filter>
+  <filter id="shMark" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#000" flood-opacity=".35"/></filter>
+  <clipPath id="clip"><path d="${smooth(UA,true)}"/></clipPath>`;
+el('rect',{x:-80,y:-80,width:920,height:760,fill:'#e9e5d8'});
+const seaP=el('polygon',{points:pts(BLACK_SEA),fill:'url(#seaG)'});
+el('polygon',{points:pts(AZOV),fill:'url(#seaG)'});
+/* градусна сітка */
+const gr=el('g',{stroke:'#b5ab8c','stroke-width':.6,'stroke-dasharray':'2 4',opacity:.55,fill:'none'});
+[24,28,32,36,40].forEach(l=>el('line',{x1:X(l),x2:X(l),y1:-40,y2:600},gr));
+[44,46,48,50,52].forEach(l=>el('line',{y1:Y(l),y2:Y(l),x1:-40,x2:820},gr));
+/* країна */
+el('path',{d:smooth(UA,true),fill:'none',stroke:'#c3b2dc','stroke-width':7,'stroke-linejoin':'round',opacity:.55});
+el('path',{d:smooth(UA,true),fill:'url(#landG)',stroke:'#7f62a6','stroke-width':1.6,'stroke-linejoin':'round',filter:'url(#shLand)'});
+const relief=el('g',{'clip-path':'url(#clip)'});
+/* річки */
+RIVERS.forEach((r,i)=>{
+  el('path',{d:smooth(r,false),fill:'none',stroke:'#7fb8dd','stroke-width':i===0?2.6:1.6,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.95},relief);
+});
+/* гори */
+MOUNTS.forEach(m=>el('path',{d:`M${X(m[0])-6},${Y(m[1])+4}L${X(m[0])},${Y(m[1])-5}L${X(m[0])+6},${Y(m[1])+4}Z`,fill:'#d3bf9a',stroke:'#a58e66','stroke-width':.8},relief));
+/* підписи сусідів і морів */
+const nbG=el('g',{});
+NEIGH.forEach(n=>{const g=el('g',{class:'sc'},nbG);g.dataset.x=X(n[1]);g.dataset.y=Y(n[2]);g.dataset.min=.6;const t=el('text',{class:'nb'},g);t.textContent=n[0];});
+[['Чорне море',31.3,44.4],['Азовське м.',37.2,46.2]].forEach(n=>{const g=el('g',{class:'sc'},nbG);g.dataset.x=X(n[1]);g.dataset.y=Y(n[2]);g.dataset.min=.6;const t=el('text',{class:'sea'},g);t.textContent=n[0];});
 
-// --- draw map
-el('polygon',{points:pts(UA),class:'land'});
-const regG=el('g',{});
-const regEls={};
-for(const k in REG){
-  const g=el('g',{class:'reg'},regG);
-  el('polygon',{points:pts(REG[k].poly),fill:REG[k].col,'fill-opacity':.28,stroke:REG[k].col,'stroke-width':1.2,'stroke-dasharray':'4 3'},g);
-  regEls[k]=g;
-}
+const areaG=el('g',{'clip-path':'url(#clip)'});
 const cityG=el('g',{class:'city'});
-CITIES.forEach(c=>{const g=el('g',{transform:`translate(${X(c[1])},${Y(c[2])})`},cityG);el('circle',{r:2.2},g);const t=el('text',{x:4,y:3},g);t.textContent=c[0];});
+CITIES.forEach(c=>{
+  const g=el('g',{class:'sc'+(c[3]?' cap':'')},cityG);g.dataset.x=X(c[1]);g.dataset.y=Y(c[2]);g.dataset.min=.55;
+  el('circle',{r:c[3]?3.4:2.3},g);const t=el('text',{x:5,y:3},g);t.textContent=c[0];
+});
 const rlabG=el('g',{});
-const rlabEls={};
-for(const k in REG){
-  const t=el('text',{class:'rlab',x:X(REG[k].lab[0]),y:Y(REG[k].lab[1]),'text-anchor':'middle'},rlabG);
-  t.textContent=REG[k].name.replace(' регіон','');
-  rlabEls[k]=t;
-}
-const markG=el('g',{});
+const markG=el('g',{filter:'url(#shMark)'});
 const fxG=el('g',{});
 
-// --- state
-let hints=true,sel=null,placed={},errs=0,view=VIEWS.all.slice(),anim=null;
-const toastEl=$('toast');let tt;
-function toast(msg,cls){toastEl.textContent=msg;toastEl.className='toast show '+(cls||'');clearTimeout(tt);tt=setTimeout(()=>toastEl.className='toast',2200);}
-
+/* ================= стан ================= */
+let G=null,sel=null,placed={},errs=0,order=[],hints=true,view=VIEWS.all.slice(),anim=null;
+let regEls={},rlabEls={},areaEls=[],sortIdx=0,drag=null,dragPt=null;
+let tt;
+function toast(msg,cls){const t=$('toast');t.textContent=msg;t.className='toast show '+(cls||'');clearTimeout(tt);tt=setTimeout(()=>t.className='toast',2400);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pip(x,y,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c;}return c;}
-function showTab(f){
-  $('game').style.display=f?'none':'';
-  $('fun').style.display=f?'block':'none';
-  $('tabGame').classList.toggle('on',!f);
-  $('tabFun').classList.toggle('on',f);
+function ping(x,y,good){const c=el('circle',{cx:x,cy:y,r:4,class:'ping'+(good?' g':'')},fxG);setTimeout(()=>c.remove(),800);}
+function toSvg(cx,cy){const pt=svg.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+
+function total(){return G.kind==='sort'?SORTS[sortIdx].items.length:G.items.length;}
+function stats(){
+  const n=Object.keys(placed).length;
+  $('done').textContent=n;$('total').textContent=total();$('err').textContent=errs;
+  $('bar').style.width=(n/total()*100)+'%';
 }
-$('tabGame').onclick=()=>showTab(false);
-$('tabFun').onclick=()=>showTab(true);
-function updateHints(){
-  for(const k in regEls)regEls[k].style.opacity=hints?1:0;
-  for(const k in rlabEls)rlabEls[k].style.display=hints?'':'none';
-  $('mode').textContent='Підказки на карті: '+(hints?'ввімк.':'вимк. (складно)');
-  $('mode').classList.toggle('on',!hints);
-}
-function applyScale(){const s=view[2]/760;
-  markG.querySelectorAll('g.m').forEach(g=>g.setAttribute('transform',`translate(${g.dataset.x},${g.dataset.y}) scale(${s})`));
-  cityG.querySelectorAll('g').forEach(g=>{const m=/translate\(([^,]+),([^)]+)\)/.exec(g.getAttribute('transform'));g.setAttribute('transform',`translate(${m[1]},${m[2]}) scale(${Math.max(s,.55)})`);});
-  rlabG.setAttribute('class','');
-  for(const k in rlabEls){rlabEls[k].setAttribute('font-size',11*Math.max(s,.55));rlabEls[k].style.fontSize=(11*Math.max(s,.6))+'px';}
+
+/* ================= масштаб / вигляд ================= */
+function applyScale(){
+  const s=view[2]/760;
+  svg.querySelectorAll('g.sc').forEach(g=>g.setAttribute('transform',`translate(${g.dataset.x},${g.dataset.y}) scale(${Math.max(s,+g.dataset.min||0)})`));
 }
 function setView(v){
   const from=view.slice(),t0=performance.now();cancelAnimationFrame(anim);
@@ -199,90 +397,272 @@ function setView(v){
 document.querySelectorAll('#focus button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#focus button').forEach(x=>x.classList.remove('on'));b.classList.add('on');setView(VIEWS[b.dataset.v]);});
 
-// --- chips
-let order=[];
+/* ================= вкладки ================= */
+GAMES.forEach(g=>{const b=document.createElement('button');b.className='tab';b.textContent=g.tab;b.dataset.id=g.id;b.onclick=()=>openGame(g.id);$('tabs').appendChild(b);});
+
+function openGame(id){
+  G=GAMES.find(g=>g.id===id);
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  const isFun=G.kind==='fun';
+  ['.tray','#ctrl','.bar','.stat'].forEach(q=>document.querySelector(q).style.display=isFun?'none':'');
+  $('funSec').style.display=isFun?'':'none';
+  if(isFun){
+    $('title').innerHTML=G.title+'<small>'+G.sub+'</small>';
+    $('mapSec').style.display='none';$('sortSec').style.display='none';
+    $('info').style.display='none';$('end').classList.remove('show');$('foot').textContent='';
+    return;
+  }
+  const isSort=G.kind==='sort';
+  $('mapSec').style.display=isSort?'none':'';
+  $('sortSec').style.display=isSort?'':'none';
+  $('mode').style.display=isSort?'none':'';
+  $('hintBtn').style.display=isSort?'none':'';
+  $('title').innerHTML=G.title+'<small>'+G.sub+'</small>';
+  $('trayTitle').textContent=G.tray;
+  $('chips').className='row'+(G.kind==='area'?' tbl':'');
+  $('info').style.display='none';
+  $('foot').textContent=isSort?'Підказка: у кожного рівня — свої колонки. Перемикай рівні зверху.':'Положення родовищ і меж приблизні — як на шкільних картах.';
+  hints=true;
+  if(!isSort)drawLayers();
+  newGame();
+}
+
+function drawLayers(){
+  areaG.innerHTML='';rlabG.innerHTML='';regEls={};rlabEls={};areaEls=[];
+  cityG.style.display='';
+  if(G.id==='oil'){
+    for(const k in REG){
+      const g=el('g',{class:'reg'},areaG);
+      el('polygon',{points:pts(REG[k].poly),fill:REG[k].col,'fill-opacity':.3,stroke:REG[k].col,'stroke-width':1.3,'stroke-dasharray':'5 3','stroke-linejoin':'round'},g);
+      regEls[k]=g;
+      const w=el('g',{class:'sc'},rlabG);w.dataset.x=X(REG[k].lab[0]);w.dataset.y=Y(REG[k].lab[1]);w.dataset.min=.6;
+      const t=el('text',{class:'rlab'},w);t.textContent=REG[k].name.replace(' регіон','');rlabEls[k]=w;
+    }
+  }
+  if(G.kind==='area'){
+    G.items.forEach((it,i)=>{
+      areaEls[i]=it.polys.map(p=>el('polygon',{points:pts(p),fill:'rgba(120,130,150,.10)',stroke:'#7a7f8f','stroke-width':1.2,'stroke-dasharray':'4 3','stroke-linejoin':'round'},areaG));
+    });
+  }
+  updateHints();applyScale();
+}
+function updateHints(){
+  if(!G||G.kind==='sort')return;
+  $('mode').textContent=G.modeName+': '+(hints?'ввімк.':'вимк. (складно)');
+  $('mode').classList.toggle('on',!hints);
+  if(G.id==='oil'){for(const k in regEls)regEls[k].style.opacity=hints?1:0;for(const k in rlabEls)rlabEls[k].style.display=hints?'':'none';}
+  else if(G.kind==='area'){G.items.forEach((it,i)=>{if(!placed[i])areaEls[i].forEach(p=>p.style.display=hints?'':'none');});}
+  else cityG.style.display=hints?'':'none';
+}
+
+/* ================= нова гра ================= */
+function newGame(){
+  placed={};errs=0;markG.innerHTML='';fxG.innerHTML='';$('end').classList.remove('show');$('info').style.display='none';
+  if(G.kind==='area'){G.items.forEach((it,i)=>areaEls[i].forEach(p=>{p.setAttribute('fill','rgba(120,130,150,.10)');p.setAttribute('stroke','#7a7f8f');p.setAttribute('stroke-dasharray','4 3');p.setAttribute('stroke-width',1.2);}));}
+  if(G.kind==='sort')buildSortUI();
+  const n=total();order=shuffle([...Array(n).keys()]);sel=order[0];
+  updateHints();buildChips();stats();applyScale();
+}
+$('reset').onclick=()=>newGame();$('again').onclick=()=>newGame();
+$('mode').onclick=()=>{hints=!hints;updateHints();};
+
+/* ================= фішки + перетягування ================= */
 function buildChips(){
   const box=$('chips');box.innerHTML='';
   order.forEach(i=>{
     if(placed[i])return;
-    const b=document.createElement('button');b.className='chip'+(sel===i?' sel':'');b.textContent=DEP[i].n;b.dataset.i=i;
-    b.onclick=()=>{sel=i;buildChips();};
+    const b=document.createElement('button');b.className='chip'+(sel===i?' sel':'');b.dataset.i=i;
+    if(G.kind==='sort')b.textContent=SORTS[sortIdx].items[i][0];
+    else if(G.kind==='area')b.textContent=G.items[i].n;
+    else{const d=G.items[i];b.innerHTML=(G.id==='oil'?'':miniSym(d.sym))+'<span>'+d.n+(d.res?'<br><small>'+d.res+'</small>':'')+'</span>';}
+    b.addEventListener('pointerdown',e=>chipDown(e,i,b));
     box.appendChild(b);
   });
 }
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function markSel(){document.querySelectorAll('#chips .chip').forEach(c=>c.classList.toggle('sel',+c.dataset.i===sel));}
+function shakeSel(){const c=document.querySelector('.chip.sel');if(c){c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');}}
+function nextSel(){const left=order.filter(i=>!placed[i]);sel=left.length?left[0]:null;return left.length;}
 
-function stats(){
-  const n=Object.keys(placed).length;
-  $('done').textContent=n;$('total').textContent=DEP.length;$('err').textContent=errs;
-  $('bar').style.width=(n/DEP.length*100)+'%';
+function chipDown(e,i,b){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  sel=i;markSel();
+  drag={i,sx:e.clientX,sy:e.clientY,on:false,ghost:null,b};
+  window.addEventListener('pointermove',dragMove,{passive:false});
+  window.addEventListener('pointerup',dragUp);
+  window.addEventListener('pointercancel',dragUp);
+}
+function dragMove(e){
+  if(!drag)return;
+  if(!drag.on){
+    if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<8)return;
+    drag.on=true;
+    const g=drag.b.cloneNode(true);g.classList.add('ghost','sel');g.style.width=drag.b.offsetWidth+'px';
+    document.body.appendChild(g);drag.ghost=g;drag.b.style.opacity=.35;
+  }
+  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+  if(G.kind==='sort'){
+    document.querySelectorAll('.col').forEach(c=>c.classList.remove('over'));
+    const t=document.elementFromPoint(e.clientX,e.clientY);const c=t&&t.closest('.col');if(c)c.classList.add('over');
+  }else{
+    const r=svg.getBoundingClientRect();
+    const inside=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+    if(inside){
+      const p=toSvg(e.clientX,e.clientY);
+      if(!dragPt)dragPt=el('circle',{r:7,fill:'rgba(255,213,74,.35)',stroke:'#e0b400','stroke-width':2},fxG);
+      dragPt.setAttribute('cx',p.x);dragPt.setAttribute('cy',p.y);
+    }else if(dragPt){dragPt.remove();dragPt=null;}
+  }
+  e.preventDefault();
+}
+function dragUp(e){
+  window.removeEventListener('pointermove',dragMove);
+  window.removeEventListener('pointerup',dragUp);
+  window.removeEventListener('pointercancel',dragUp);
+  const d=drag;drag=null;if(!d)return;
+  if(dragPt){dragPt.remove();dragPt=null;}
+  document.querySelectorAll('.col').forEach(c=>c.classList.remove('over'));
+  if(!d.on)return;
+  d.ghost.remove();d.b.style.opacity='';
+  if(e.type==='pointercancel')return;
+  if(G.kind==='sort'){
+    const t=document.elementFromPoint(e.clientX,e.clientY);const c=t&&t.closest('.col');
+    if(c)dropToCol(c.dataset.id,c);
+  }else{
+    const r=svg.getBoundingClientRect();
+    if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)placeAt(e.clientX,e.clientY);
+  }
 }
 
-function newGame(){
-  placed={};errs=0;markG.innerHTML='';fxG.innerHTML='';$('end').classList.remove('show');
-  order=shuffle(DEP.map((_,i)=>i));sel=order[0];buildChips();stats();
+/* ================= розміщення на карті ================= */
+svg.addEventListener('click',e=>placeAt(e.clientX,e.clientY));
+function placeAt(cx,cy){
+  if(!G||G.kind==='sort')return;
+  if(sel===null){toast('Спершу обери об’єкт внизу');return;}
+  const p=toSvg(cx,cy);
+  if(G.kind==='point')clickPoint(p);else clickArea(p);
 }
 
-// --- tap on map
-svg.addEventListener('click',e=>{
-  if(sel===null){toast('Спершу обери родовище внизу');return;}
-  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
-  const p=pt.matrixTransform(svg.getScreenCTM().inverse());
-  const d=DEP[sel];
-  const dist=(q)=>Math.hypot(p.x-X(q.lon),p.y-Y(q.lat));
+function clickPoint(p){
+  const d=G.items[sel];
+  const dist=q=>Math.hypot(p.x-X(q.lon),p.y-Y(q.lat));
   const dc=dist(d);
   let ok=dc<=42;
-  if(ok)for(let i=0;i<DEP.length;i++){if(i!==sel&&dist(DEP[i])<dc){ok=false;break;}}
+  if(ok)for(let i=0;i<G.items.length;i++){if(i!==sel&&dist(G.items[i])<dc){ok=false;break;}}
   if(ok){
     placed[sel]=true;
-    const g=el('g',{class:'m'},markG);g.dataset.x=X(d.lon);g.dataset.y=Y(d.lat);
-    el('circle',{r:5,fill:REG[d.r].col,stroke:'#fff','stroke-width':1.5},g);
-    const t=el('text',{x:8,y:3.5,class:'lab',fill:REG[d.r].col},g);t.textContent=d.n;
+    const g=el('g',{class:'m sc'},markG);g.dataset.x=X(d.lon);g.dataset.y=Y(d.lat);g.dataset.min=0;
+    const halo=G.id==='oil'?'':'<circle r="9" fill="#fff" fill-opacity=".93" stroke="#cbbf9f" stroke-width=".8"/>';
+    g.innerHTML=`<g class="pop">${halo}${symSVG(d.sym,d.col)}<text x="11" y="3.5" class="lab">${d.n}</text></g>`;
     ping(X(d.lon),Y(d.lat),true);
-    toast('✔ '+d.n+' — '+REG[d.r].name,'good');
-    const left=order.filter(i=>!placed[i]);
-    sel=left.length?left[0]:null;
-    applyScale();buildChips();stats();
-    if(!left.length)finish();
+    toast('✔ '+d.n+(d.res?' — '+d.res:'')+' ('+d.where+')','good');
+    const left=nextSel();applyScale();buildChips();stats();
+    if(!left)finish();
   }else{
-    errs++;stats();ping(p.x,p.y,false);
-    const chip=document.querySelector('.chip.sel');if(chip){chip.classList.remove('shake');void chip.offsetWidth;chip.classList.add('shake');}
+    errs++;stats();ping(p.x,p.y,false);shakeSel();
     let msg='Не тут. Спробуй ще!';
     if(hints){
-      const lon=p.x/K+21.5,lat=52.7-p.y/S;
-      let inR=null;for(const k in REG)if(pip(lon,lat,REG[k].poly))inR=k;
-      if(inR&&inR!==d.r)msg='Це '+REG[inR].name+', а «'+d.n+'» — в іншому регіоні.';
-      else if(inR)msg='Регіон правильний, але місце ні — придивись до карти.';
-      else msg='Тут немає нафтогазоносного регіону.';
+      if(G.id==='oil'){
+        const lon=p.x/K+21.5,lat=52.7-p.y/S;
+        let inR=null;for(const k in REG)if(pip(lon,lat,REG[k].poly))inR=k;
+        if(inR&&inR!==d.r)msg='Це '+REG[inR].name+', а «'+d.n+'» — в іншому регіоні.';
+        else if(inR)msg='Регіон правильний, але місце ні — придивись до карти.';
+        else msg='Тут немає нафтогазоносного регіону.';
+      }else msg=dc<110?'Близько, але не те місце.':'Далеко від потрібного місця.';
     }
     toast(msg,'err');
   }
-});
-function ping(x,y,good){const c=el('circle',{cx:x,cy:y,r:4,class:'ping'+(good?' g':'')},fxG);setTimeout(()=>c.remove(),800);}
+}
 
+function clickArea(p){
+  const lon=p.x/K+21.5,lat=52.7-p.y/S;
+  let hit=-1;
+  for(let i=0;i<G.items.length&&hit<0;i++)if(G.items[i].polys.some(poly=>pip(lon,lat,poly)))hit=i;
+  if(hit===sel){
+    const it=G.items[sel];placed[sel]=true;
+    areaEls[sel].forEach(pl=>{pl.style.display='';pl.setAttribute('fill',it.col);pl.setAttribute('fill-opacity',.6);pl.setAttribute('stroke','#4a4a4a');pl.setAttribute('stroke-dasharray','');pl.setAttribute('stroke-width',1.4);});
+    const c=it.polys[0].reduce((a,q)=>[a[0]+q[0]/it.polys[0].length,a[1]+q[1]/it.polys[0].length],[0,0]);
+    const g=el('g',{class:'m sc'},markG);g.dataset.x=X(c[0]);g.dataset.y=Y(c[1]);g.dataset.min=0;
+    const words=it.n.split(' ');const half=Math.ceil(words.length/2);
+    const lines=words.length>2?[words.slice(0,half).join(' '),words.slice(half).join(' ')]:[it.n];
+    const inner=el('g',{class:'pop'},g);
+    lines.forEach((ln,k)=>{const t=el('text',{class:'alab',y:k*11-(lines.length-1)*5},inner);t.textContent=ln;});
+    ping(X(c[0]),Y(c[1]),true);
+    const info=$('info');info.style.display='block';info.style.borderLeftColor=it.col;info.innerHTML='<b>'+it.n+'</b>'+it.info;
+    toast('✔ '+it.n,'good');
+    const left=nextSel();applyScale();buildChips();stats();
+    if(!left)finish();
+  }else{
+    errs++;stats();ping(p.x,p.y,false);shakeSel();
+    let msg='Не тут. Спробуй ще!';
+    if(hints)msg=hit>=0?'Це «'+G.items[hit].n+'», а шукаємо «'+G.items[sel].n+'».':'Тут немає цієї структури.';
+    toast(msg,'err');
+  }
+}
+
+/* ================= підказка ================= */
+$('hintBtn').onclick=()=>{
+  if(!G||sel===null||G.kind==='sort')return;
+  const it=G.items[sel];
+  if(G.id==='oil'){
+    const g=regEls[it.r];g.style.opacity=1;g.classList.add('pulse');rlabEls[it.r].style.display='';
+    setTimeout(()=>{g.classList.remove('pulse');if(!hints){g.style.opacity=0;rlabEls[it.r].style.display='none';}},2600);
+  }else if(G.kind==='point'){
+    const c=el('circle',{cx:X(it.lon),cy:Y(it.lat),r:62,fill:'rgba(255,213,74,.25)',stroke:'#e0b400','stroke-width':2,'stroke-dasharray':'6 4'},fxG);
+    setTimeout(()=>c.remove(),2800);
+  }else{
+    const si=sel;
+    areaEls[si].forEach(pl=>{pl.style.display='';pl.classList.add('pulse');pl.setAttribute('stroke','#e0b400');pl.setAttribute('stroke-width',3);});
+    setTimeout(()=>areaEls[si].forEach(pl=>{pl.classList.remove('pulse');if(!placed[si]){pl.setAttribute('stroke','#7a7f8f');pl.setAttribute('stroke-width',1.2);if(!hints)pl.style.display='none';}}),2800);
+  }
+  toast('«'+it.n+'»: '+it.where);
+};
+
+/* ================= таблиця ================= */
+function buildSortUI(){
+  const lv=$('levels');lv.innerHTML='';
+  SORTS.forEach((s,i)=>{const b=document.createElement('button');b.textContent='Рівень '+(i+1)+': '+s.name;b.className=i===sortIdx?'on':'';b.onclick=()=>{sortIdx=i;newGame();};lv.appendChild(b);});
+  const cols=$('cols');cols.innerHTML='';
+  SORTS[sortIdx].cols.forEach(c=>{
+    const d=document.createElement('div');d.className='col';d.dataset.id=c.id;
+    d.innerHTML='<h4>'+c.n+'</h4><p>'+(c.s||'&nbsp;')+'</p><div class="tags"></div>';
+    d.onclick=()=>dropToCol(c.id,d);
+    cols.appendChild(d);
+  });
+}
+function dropToCol(cid,d){
+  if(sel===null){toast('Спершу обери копалину внизу');return;}
+  const it=SORTS[sortIdx].items[sel];
+  if(it[1]===cid){
+    placed[sel]=true;
+    const t=document.createElement('span');t.className='tag';t.textContent=it[0];d.querySelector('.tags').appendChild(t);
+    toast('✔ '+it[0],'good');
+    const left=nextSel();buildChips();stats();
+    if(!left)finish();
+  }else{
+    errs++;stats();shakeSel();d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake');
+    toast('Не сюди. «'+it[0]+'» — не «'+SORTS[sortIdx].cols.find(c=>c.id===cid).n.toLowerCase()+'».','err');
+  }
+}
+
+/* ================= фінал ================= */
 function finish(){
-  const total=DEP.length;
-  let title='Чудово! 🎉',txt='Усі '+total+' родовищ на місці. Помилок: '+errs+'.';
-  if(errs===0)title='Без жодної помилки! 🏆';
-  else if(errs>8)title='Усе поставлено 👍';
-  if(errs>8)txt+=' Спробуй ще раз — а потім вимкни підказки на карті.';
+  const n=total();
+  let title=errs===0?'Без жодної помилки! 🏆':(errs>8?'Усе поставлено 👍':'Чудово! 🎉');
+  let txt='Усе на місці: '+n+'. Помилок: '+errs+'.';
+  if(errs>8)txt+=' Спробуй ще раз — а потім вимкни підказки.';
+  if(G.kind==='area')txt+=' З Українським щитом пов’язана більшість родовищ рудних і нерудних корисних копалин; у платформному чохлі зосереджені осадові породи; до западин і прогинів приурочені родовища вугілля, нафти, газу, солей.';
   $('endTitle').textContent=title;$('endText').textContent=txt;$('end').classList.add('show');
   $('end').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// --- buttons
-$('mode').onclick=()=>{hints=!hints;updateHints();};
-$('hintBtn').onclick=()=>{
-  if(sel===null)return;const k=DEP[sel].r;
-  const g=regEls[k];const prev=g.style.opacity;g.style.opacity=1;g.classList.add('pulse');
-  rlabEls[k].style.display='';
-  toast('«'+DEP[sel].n+'»: '+REG[k].name);
-  setTimeout(()=>{g.classList.remove('pulse');if(!hints){g.style.opacity=0;rlabEls[k].style.display='none';}},2600);
-};
-$('reset').onclick=newGame;$('again').onclick=newGame;
+/* ================= вкладка «Цікаве» ================= */
+(function(){
+  const img=$('funImg');
+  img.addEventListener('click',()=>img.classList.toggle('big'));
+  img.addEventListener('error',()=>{img.style.display='none';$('funMiss').style.display='block';});
+})();
 
-updateHints();applyScale();newGame();
+openGame('oil');
 </script>
 </body>
 </html>
-
