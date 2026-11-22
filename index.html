@@ -18,7 +18,7 @@ h1{font-size:17px;margin:0 0 2px}
 .tab small{opacity:.8;margin-left:4px}
 .tab.done small{color:#8df0b0}
 .tab:not(.on).done small{color:var(--ok)}
-main{padding:0 12px}
+main{padding:0 12px;max-width:1000px;margin:0 auto}
 .card{background:var(--card);border-radius:12px;padding:10px;margin:8px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .hint{font-size:12.5px;color:var(--mut)}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
@@ -27,7 +27,7 @@ main{padding:0 12px}
 .pill.r{background:#fdeaea;color:var(--bad)}
 .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:13px}
 .btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}
-#mapbox{overflow:auto;max-height:56vh;border-radius:8px;border:1px solid var(--line);background:#cfe4f3;touch-action:pan-x pan-y}
+#mapbox{overflow:auto;max-height:70vh;border-radius:8px;border:1px solid var(--line);background:#cfe4f3;touch-action:pan-x pan-y}
 #mapbox svg{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
 .chip{background:#fff;border:2px solid var(--acc);color:var(--acc);border-radius:10px;padding:6px 9px;font-size:13px;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -300,7 +300,10 @@ function drawSvg(){
   const ns='http://www.w3.org/2000/svg';
   const sv=document.createElementNS(ns,'svg');
   sv.setAttribute('viewBox','0 0 '+g.W+' '+g.H);
-  sv.style.width=(zoom*100)+'%';
+  const maxH=window.innerHeight*0.68;
+  const baseW=Math.min(box.clientWidth,maxH*g.W/g.H);
+  sv.style.width=(zoom*baseW)+'px';
+  sv.style.margin='0 auto';
   sv.id='svg';
   const im=document.createElementNS(ns,'image');
   im.setAttribute('href',g.img);im.setAttribute('width',g.W);im.setAttribute('height',g.H);
@@ -309,7 +312,7 @@ function drawSvg(){
   box.appendChild(sv);
   box.scrollLeft=sl;box.scrollTop=stp;
   box.classList.toggle('armed',!!selId||!!drag);
-  const sc=box.clientWidth*zoom/g.W;  // px per map unit
+  const sc=baseW*zoom/g.W; // px per map unit
   const R=Math.max(9,13)/sc;
   const fs=11/sc;
   if(g.type==='area'){
